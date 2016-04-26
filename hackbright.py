@@ -74,8 +74,22 @@ def get_project_by_title(title):
 
 def get_grade_by_github_title(github, title):
     """Print grade student received for a project."""
-    pass
+    
+    QUERY = """
+        SELECT grade
+        FROM grades
+        WHERE student_github = :github
+        AND project_title = :title
+        """
 
+    # executing query and binding results to db_cursor
+    # order of parameters matter. Should match parameters from above.
+    db_cursor = db.session.execute(QUERY, {'github': github,
+                                            'title': title})
+
+    row = db_cursor.fetchone()
+    
+    print "Student grade: %s" % (row[0])
 
 def assign_grade(github, title, grade):
     """Assign a student a grade on an assignment and print a confirmation."""
@@ -91,10 +105,10 @@ def handle_input():
     command = None
 
     while command != "quit":
-        input_string = raw_input("HBA Database> ")
-        tokens = input_string.split()
-        command = tokens[0]
-        args = tokens[1:]
+        input_string = raw_input("HBA Database> ")  #input by user
+        tokens = input_string.split() #takin input and returning a list of strings binding it to tokens
+        command = tokens[0] #binding command to first item of tokens list 
+        args = tokens[1:] #binding args to all the items after and including the first index
 
         if command == "student":
             github = args[0]
@@ -103,6 +117,17 @@ def handle_input():
         elif command == "new_student":
             first_name, last_name, github = args   # unpack!
             make_new_student(first_name, last_name, github)
+
+        #if the command entered is equal to 'project_description'
+        elif command == "project_description": 
+            # parameter title equals to the word after our command
+            title = args[0]
+            # calling function 
+            get_project_by_title(title)
+
+        elif command == 'student grade':
+            github, title = args
+            get_grade_by_github_title(github, title)
 
         else:
             if command != "quit":
@@ -113,6 +138,6 @@ if __name__ == "__main__":
     app = Flask(__name__)
     connect_to_db(app)
 
-    # handle_input()
+    handle_input()
 
     db.session.close()
